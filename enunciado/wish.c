@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-char **parseInput(char *input)
+int parseInput(char *input, char *inputArray[])
 {
     char *token;
-    char *array[20]; // Suponiendo un máximo de 20 palabras
     int i = 0;
 
     // Obtener el primer token
@@ -14,14 +13,15 @@ char **parseInput(char *input)
     // Iterar sobre el resto de los tokens
     while (token != NULL)
     {
-        array[i++] = token; // Guardar el token en el array
+        inputArray[i++] = token; // Guardar el token en el array
         token = strtok(NULL, " ");
     }
-    return array;
+    return i;
 }
 
 int main(int argc, char *argv[])
 {
+    // Inicialización de variables globales del programa
     const char *mypath[] = {
         "./",
         "/usr/bin/",
@@ -29,12 +29,15 @@ int main(int argc, char *argv[])
         NULL};
 
     char input[51];
-    char **inputArray;
+    char *inputArray[20]; // Suponiendo un máximo de 20 palabras
 
-    /** Dentro del main del intérprete*/
     while (1)
     {
-        char *command = NULL;
+        // Inicialización de variables interactivas
+        char *command = malloc(10 * sizeof(char));
+        if (command == NULL)
+            return 1;
+
         /* Wait for input */
         printf("wish> ");
         gets(input);
@@ -42,17 +45,24 @@ int main(int argc, char *argv[])
         if (strcmp(input, "exit") == 0)
             exit(0);
 
-        inputArray = parseInput(input);
-
+        int arrayLength = parseInput(input, inputArray);
         // Imprime los resultados
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < arrayLength; j++)
         {
             printf("%s\n", inputArray[j]);
         }
-
+        command = inputArray[0];
         if (strcmp(command, "cd") == 0)
         {
-            printf("Cd recognized\n");
+            if (arrayLength != 2) // Si el comando es cd sólo se debe ingresar un argumento
+                exit(1);
+            int cdResult = chdir(inputArray[2]);
+            printf("Resultado de cd %d\n", cdResult);
+            if (cdResult != 0)
+            {
+                printf("Error al ejecutar cd\n");
+                exit(1);
+            }
         }
         printf("Command not recognized: %s\n", input);
 
